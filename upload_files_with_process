@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* 進度條的css */
+        .progress {
+          margin: 0px;
+          position:relative; 
+          width:200px; 
+          border: 2px solid rgb(20, 3, 96); 
+          padding: 1px; 
+          border-radius: 3px; 
+        }
+        .bar { 
+          background-color: #7cc7ee; 
+          width:0%; 
+          height:50px; 
+          border-radius: 3px; 
+          transition: width 1s;
+        }
+        .percent { 
+          position:absolute; 
+          display:inline-block; 
+          top:0px; 
+          left:40%; 
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.6.1.min.js">  
+    </script> 
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <form id="myForm">
+      <table width="90%" class="table">
+        <tr>
+          <td>
+            <input type="hidden" name="type" id="type" value="class" />
+            <input type="hidden" name="op" id="op" value="kw_leave_config_upload" >
+            <input type="file" name="file" id="file"  class="form-control form-control-sm "/>    
+          </td><td>
+            <input type="submit" name="submit" value="匯入班級" id="submit" class="btn btn-sm btn-primary"/>
+          </td>
+        </tr>
+      </table>
+    </form>
+    <!-- 進度條 -->
+    <div class='progress-div' id="progress-div">
+      <!--<div class='bar' id='bar'></div>
+      <div class='percent' id='percent'>0%</div>-->
+      <div id="msg"></div>
+    </div>
+    
+
+<script>
+$(document).ready(function(){
+    //$("#type").val(window.parent.$("#type").val());
+
+    $("#file").change(function(data){
+        //$('#progress-div').empty() //.text(data.file[0].name+"("+data.file[0].type+") "+data.file[0].size+"kb")
+        $('#progress-div').prepend("<div class='progress' id='progress'><div class='bar' id='bar'></div></div>");
+        $('#progress').append("<div class='percent' id='percent'>0%</div>");
+    });
+    
+    $("#myForm").submit(function(e){
+      e.preventDefault();
+      var progress = $(".progress"); 
+    
+      if($("#file").val() === ""){
+        //call parent
+        window.parent.showSwal('nofile');
+        return;
+      }
+      window.parent.showSwal("progress");
+      var formData = new FormData($("#myForm")[0]);
+      $.ajax({
+        type: "POST",
+        url: "config.php",
+        data:formData,
+        cache:false,
+        processData: false,
+        contentType: false,
+        dataType: "json",
+        success: function (data){
+          console.log(data);
+          if(data.status == 1)
+          { 
+            $('#msg').text(data.content).append("檔案大小："+data.size+"KB");
+            window.parent.showSwal("uploaded");
+            setTimeout(function() { 
+              window.parent.location.reload();
+            }, 3000); 
+          }
+          else{ //失敗
+            $('#msg').text(data.content);
+            $("#percent").text("0%"); // 錯誤發生進度歸0%
+            $("#bar").width("0%");
+            window.parent.swal("失敗", data.content ,"error");
+          } 
+        },
+        error: function(jqxhr, textstatus, errorthrown){
+          console.log(jqxhr);
+          window.parent.showSwal("error");
+          progress.hide(); 
+        },
+        xhr:function(){
+          var xhr = new window.XMLHttpRequest(); // 建立xhr(XMLHttpRequest)物件
+            xhr.upload.addEventListener("progress", function(progressEvent){ // 監聽ProgressEvent
+                if (progressEvent.lengthComputable) {
+                  var percentComplete = progressEvent.loaded / progressEvent.total;
+                  var percentVal = Math.round(percentComplete*100) + "%";
+                  $("#percent").text(percentVal); // 進度條百分比文字
+                  //$("#bar").width(percentVal);    // 進度條顏色
+                  $("#bar").animate({"width" : percentVal});    // 進度條動畫
+                }
+            }, false);
+            return xhr; 
+        }
+      }).fail( function(hxr, error) {
+        console.log(error);
+        window.parent.showSwal("error");
+        $("#percent").text("0%"); // 錯誤發生進度歸0%
+        $("#bar").width("0%");
+      });  
+      
+    });
+});
+
+
+</script>
+
+</body>
+</html>
