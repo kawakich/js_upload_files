@@ -39,8 +39,7 @@
       <table width="90%" class="table">
         <tr>
           <td>
-            <input type="hidden" name="type" id="type" value="class" />
-            <input type="hidden" name="op" id="op" value="kw_leave_config_upload" >
+            <input type="hidden" name="op" id="op" value="upload" >
             <input type="file" name="file" id="file"  class="form-control form-control-sm "/>    
           </td><td>
             <input type="submit" name="submit" value="匯入班級" id="submit" class="btn btn-sm btn-primary"/>
